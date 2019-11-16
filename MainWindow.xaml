@@ -1,12 +1,98 @@
 ﻿<Window x:Class="psn_node_admin.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:psn_node_admin"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="PSN Node Admin" Height="665" Width="500" Loaded="Window_Loaded" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+
     <Grid>
-        
+        <StackPanel x:Name="StackPanelPrompt" VerticalAlignment="Center" HorizontalAlignment="Center" Width="280">
+            <Label Content="PSN" VerticalAlignment="Top" FontSize="120" Padding="0" FontWeight="Bold" Foreground="LightGray" HorizontalContentAlignment="Center" Margin="0,-45,0,-10"/>
+            <TextBlock Text="Connect a PSN node. If there is already one connected then re-connect it." HorizontalAlignment="Stretch" VerticalAlignment="Top" TextWrapping="Wrap" TextAlignment="Center" Margin="26,0"/>
+        </StackPanel>
+
+        <Button Content="Button" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" Width="75" Click="Button_Click"/>
+
+
+        <Grid x:Name="GridConfigOverlay" Background="White" Visibility="Visible">
+            <Label x:Name="LabelID" Content="Node ID/MAC Address" Margin="10,10,9,0" VerticalAlignment="Top" Height="26" FontWeight="Bold" HorizontalContentAlignment="Center"/>
+
+            <Button x:Name="ButtonSave" Content="Save" HorizontalAlignment="Right" Margin="0,0,115,10" VerticalAlignment="Bottom" Width="120" Height="26" Padding="0,-2,0,0" Grid.Column="1" Click="ButtonSave_Click"/>
+            <Button x:Name="ButtonCancel" Content="Cancel" HorizontalAlignment="Right" Margin="0,0,10,10" VerticalAlignment="Bottom" Width="100" Height="26" Padding="0,-2,0,0" Grid.Column="1" Click="ButtonCancel_Click"/>
+
+            <GroupBox Margin="10,41,10,0" VerticalAlignment="Top">
+                <GroupBox.Header>
+                    <TextBlock FontWeight="Bold" Text="WiFi Network"/>
+                </GroupBox.Header>
+
+                <Grid Margin="5,8,5,5">
+                    <Label Content="WiFi Network Name" VerticalAlignment="Top" Padding="20,0,0,4" HorizontalAlignment="Left" FontStyle="Italic"/>
+                    <TextBox x:Name="TextBoxNetworkName" Height="26" Margin="0,20,0,0" TextWrapping="Wrap" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="2,-3,2,0" MaxLength="31"/>
+                    <CheckBox x:Name="CheckBoxIsEnterprise" Content="This is an enterprise wifi network" HorizontalAlignment="Left" Margin="-1,51,0,0" VerticalAlignment="Top" Padding="5,-1,0,0"/>
+                    <Label Content="&#xE11B;" HorizontalAlignment="Right" Margin="0,51,4,0" VerticalAlignment="Top" FontFamily="Segoe UI Symbol" Padding="0" FontSize="11" ToolTip="Enterprise wifi authenticates users with a username and password" Width="12"/>
+                    <Label Content="WiFi Username (Enterprise WiFi)" Margin="0,75,0,0" VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left"/>
+                    <TextBox x:Name="TextBoxNetworkUsername" Height="26" Margin="0,95,0,0" TextWrapping="Wrap" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="2,-3,2,0" IsEnabled="{Binding IsChecked, ElementName=CheckBoxIsEnterprise}" MaxLength="63"/>
+                    <Label Content="WiFi Password" Margin="0,126,0,0" VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left"/>
+                    <TextBox x:Name="TextBoxNetworkPassword" Height="26" Margin="0,146,0,0" TextWrapping="Wrap" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="2,-3,2,0" MaxLength="63"/>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Margin="10,254,10,0" VerticalAlignment="Top">
+                <GroupBox.Header>
+                    <TextBlock FontWeight="Bold" Text="Logging Server"/>
+                </GroupBox.Header>
+
+                <Grid Margin="5,8,5,5">
+                    <TextBlock VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left">
+                        <Run Text="Logger IP Address &amp; Port"/>
+                        <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="Logger is the server responsible for receiving node data. Default port is 1883"/>
+                    </TextBlock>
+
+                    <TextBox x:Name="TextBoxLoggerAddress" Height="26" Margin="0,20,85,0" TextWrapping="Wrap" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="2,-3,2,0" MaxLength="15"/>
+                    <TextBox x:Name="TextBoxLoggerPort" Height="26" Margin="0,20,0,0" TextWrapping="Wrap" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="2,-3,2,0" HorizontalAlignment="Right" Width="80" MaxLength="5"/>
+                </Grid>
+            </GroupBox>
+
+            <GroupBox Margin="10,341,10,0" VerticalAlignment="Top">
+                <GroupBox.Header>
+                    <TextBlock FontWeight="Bold" Text="Timeouts"/>
+                </GroupBox.Header>
+
+                <Grid Margin="5,8,5,5">
+                    <TextBlock VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left" Width="239">
+                        <Run Text="Network Connect Timeout"/>
+                        <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="Time to wait before aborting network connection attempt"/>
+                    </TextBlock>
+                    <Slider x:Name="SliderNetworkConnectTimeout" Margin="0,20,30,0" VerticalAlignment="Top" Minimum="1" Maximum="20" IsSnapToTickEnabled="True"/>
+                    <Label Content="{Binding ElementName=SliderNetworkConnectTimeout, Path=Value}" ContentStringFormat="{}{0}s" Margin="0,20,0,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" Padding="0" HorizontalAlignment="Right" Width="25"/>
+
+                    <TextBlock Margin="0,44,0,0" VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left" Width="226">
+                        <Run Text="Logger Connect Timeout"/>
+                        <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="Time to wait before aborting logger connection attempt"/>
+                    </TextBlock>
+                    <Slider x:Name="SliderLoggerConnectTimeout" Margin="0,64,30,0" VerticalAlignment="Top" Minimum="1" Maximum="20" IsSnapToTickEnabled="True"/>
+                    <Label Content="{Binding ElementName=SliderLoggerConnectTimeout, Path=Value}" ContentStringFormat="{}{0}s" Margin="0,64,0,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" Padding="0" HorizontalAlignment="Right" Width="25"/>
+
+                    <TextBlock Margin="0,86,0,-4" VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left" Width="235">
+                        <Run Text="Logger Subscribe Timeout"/>
+                        <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="Time to wait before aborting second part of logger connection attempt"/>
+                    </TextBlock>
+                    <Slider x:Name="SliderLoggerSubscribeTimeout" Margin="0,106,30,0" VerticalAlignment="Top" Minimum="1" Maximum="20" IsSnapToTickEnabled="True"/>
+                    <Label Content="{Binding ElementName=SliderLoggerSubscribeTimeout, Path=Value}" ContentStringFormat="{}{0}s" Margin="0,106,0,-22" VerticalAlignment="Top" HorizontalContentAlignment="Center" Padding="0" HorizontalAlignment="Right" Width="25"/>
+
+                    <TextBlock Margin="0,130,0,-48" VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left" Width="254">
+                        <Run Text="Logger Session Request Timeout"/>
+                        <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="Time to wait before aborting request to get the session for this node"/>
+                    </TextBlock>
+                    <Slider x:Name="SliderLoggerSessionTimeout" Margin="0,150,30,0" VerticalAlignment="Top" Minimum="1" Maximum="20" IsSnapToTickEnabled="True"/>
+                    <Label Content="{Binding ElementName=SliderLoggerSessionTimeout, Path=Value}" ContentStringFormat="{}{0}s" Margin="0,150,0,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" Padding="0" HorizontalAlignment="Right" Width="25"/>
+
+                    <TextBlock Margin="0,172,0,-90" VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left" Width="212">
+                        <Run Text="Logger Report Transmit Timeout"/>
+                        <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="Time to wait before aborting attempt to transmit report. Reports are retained until successfully transmitted"/>
+                    </TextBlock>
+                    <Slider x:Name="SliderLoggerReportTimeout" Margin="0,192,30,0" VerticalAlignment="Top" Minimum="1" Maximum="20" IsSnapToTickEnabled="True"/>
+                    <Label Content="{Binding ElementName=SliderLoggerReportTimeout, Path=Value}" ContentStringFormat="{}{0}s" Margin="0,192,0,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" Padding="0" HorizontalAlignment="Right" Width="25"/>
+                </Grid>
+            </GroupBox>
+        </Grid>
     </Grid>
 </Window>
