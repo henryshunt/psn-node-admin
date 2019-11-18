@@ -1,33 +1,15 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Ports;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace psn_node_admin
 {
     public partial class MainWindow : Window
     {
         private SerialPort Port = null;
-        private NodeInfo ConnectedNode { get; set; } = null;
-
-        private bool IsAwaitingPing = false;
-        private bool IsAwaitingConfig = false;
-        private bool IsAwaitingWrite = false;
-
+        private NodeConfig LoadedConfig = null;
 
         public MainWindow()
         {
@@ -39,78 +21,164 @@ namespace psn_node_admin
 
         }
 
-        // https://forum.arduino.cc/index.php?topic=396450
-
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            Port = new SerialPort("COM4", 9600, Parity.None, 8, StopBits.One);
-            Port.Open();
-
-            // Send ping to check if device is a PSN node
-            IsAwaitingPing = true;
-            Port.Write("psna_sc\n");
-
-            if (WaitForResponse() == "psna_scr")
-            {
-                Port.Write("psna_rc\n");
-                string x = WaitForResponse();
-                if (x.StartsWith("psna_rcr {"))
-                {
-                    string json = x.Replace("psna_rcr ", "");
-                    NodeInfo reportJson = JsonConvert.DeserializeObject<NodeInfo>(json);
-
-                    LabelID.Content = "Node ID/MAC Address: " + reportJson.Identifier;
-
-                    TextBoxNetworkName.Text = reportJson.NetworkName;
-                    CheckBoxIsEnterprise.IsChecked = reportJson.IsEnterpriseNetwork;
-                    TextBoxNetworkUsername.Text = reportJson.NetworkUsername;
-                    TextBoxNetworkPassword.Text = reportJson.NetworkPassword;
-
-                    TextBoxLoggerAddress.Text = reportJson.LoggerAddress;
-                    TextBoxLoggerPort.Text = reportJson.LoggerPort.ToString();
-
-                    SliderNetworkConnectTimeout.Value = reportJson.NetworkConnectTimeout;
-                    SliderLoggerConnectTimeout.Value = reportJson.LoggerConnectTimeout;
-                    SliderLoggerSubscribeTimeout.Value = reportJson.LoggerSubscribeTimeout;
-                    SliderLoggerSessionTimeout.Value = reportJson.LoggerSessionTimeout;
-                    SliderLoggerReportTimeout.Value = reportJson.LoggerReportTimeout;
-
-
-                    GridConfigOverlay.Visibility = Visibility.Visible;
-                }
-            }
-        }
-
-        private string WaitForResponse()
-        {
-            string response = "";
-            bool should_end = false;
-
-            while (!should_end)
-            {
-                while (Port.BytesToRead > 0)
-                {
-                    char c = (char)Port.ReadChar();
-
-                    if (c != '\n')
-                        response += c;
-                    else should_end = true;
-                }
-            }
-
-            Console.WriteLine(response);
-            return response;
+            SerialDeviceConnected();
         }
 
 
         private void ButtonSave_Click(object sender, RoutedEventArgs e)
         {
+            NodeConfig newConfig = new NodeConfig();
+            newConfig.NetworkName = TextBoxNetworkName.Text;
+            newConfig.IsEnterpriseNetwork = (bool)CheckBoxIsEnterprise.IsChecked;
+            newConfig.NetworkUsername = TextBoxNetworkUsername.Text;
+            newConfig.NetworkPassword = TextBoxNetworkPassword.Text;
+            newConfig.LoggerAddress = TextBoxLoggerAddress.Text;
+            newConfig.LoggerPort = Convert.ToUInt16(TextBoxLoggerPort.Text);
+            newConfig.NetworkConnectTimeout = (byte)SliderNetworkConnectTimeout.Value;
+            newConfig.LoggerConnectTimeout = (byte)SliderLoggerConnectTimeout.Value;
+            newConfig.LoggerSubscribeTimeout = (byte)SliderLoggerSubscribeTimeout.Value;
+            newConfig.LoggerSessionTimeout = (byte)SliderLoggerSessionTimeout.Value;
+            newConfig.LoggerReportTimeout = (byte)SliderLoggerReportTimeout.Value;
 
+            Console.WriteLine(newConfig.ToString());
+            Port.Write("psna_wc " + newConfig.ToString() + '\n');
+            WaitForSerialMessage();
+
+            ButtonCancel_Click(this, new RoutedEventArgs());
         }
-
         private void ButtonCancel_Click(object sender, RoutedEventArgs e)
         {
-            GridConfigOverlay.Visibility = Visibility.Collapsed;
+            if (Port != null)
+            {
+                Port.Close();
+                Port = null;
+            }
+
+            LoadedConfig = null;
+            GridConfigOverlay.Visibility = Visibility.Hidden;
+        }
+
+        private void TextBoxNetworkName_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ValidateFields();
+        }
+        private void CheckBoxIsEnterprise_Checked(object sender, RoutedEventArgs e)
+        {
+            if (!(bool)CheckBoxIsEnterprise.IsChecked)
+                TextBoxNetworkUsername.Text = "";
+            ValidateFields();
+        }
+        private void TextBoxNetworkUsername_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ValidateFields();
+        }
+        private void TextBoxNetworkPassword_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ValidateFields();
+        }
+        private void TextBoxLoggerAddress_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ValidateFields();
+        }
+        private void TextBoxLoggerPort_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            ValidateFields();
+        }
+
+        private void ValidateFields()
+        {
+            if (TextBoxNetworkName.Text.Length > 0)
+            {
+                if (!(bool)CheckBoxIsEnterprise.IsChecked ||
+                    ((bool)CheckBoxIsEnterprise.IsChecked && TextBoxNetworkUsername.Text.Length > 0))
+                {
+                    if (TextBoxNetworkPassword.Text.Length > 0)
+                    {
+                        if (TextBoxLoggerAddress.Text.Length > 0)
+                        {
+                            if (TextBoxLoggerPort.Text.Length > 0)
+                            {
+                                ButtonSave.IsEnabled = true;
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
+            ButtonSave.IsEnabled = false;
+        }
+
+        private void SerialDeviceConnected()
+        {
+            try
+            {
+                Port = new SerialPort("COM4", 9600, Parity.None, 8, StopBits.One);
+                Port.Open();
+
+                // Send start communication (SC) command to check if device is a PSN node
+                Port.Write("psna_sc\n");
+
+                // Received SC command response so send read config (RC) command
+                if (WaitForSerialMessage() == "psna_scr")
+                {
+                    Port.Write("psna_rc\n");
+                    string rcResponse = WaitForSerialMessage();
+
+                    // Received RC command response with JSON data. Display to user
+                    if (rcResponse.StartsWith("psna_rcr {"))
+                    {
+                        string json = rcResponse.Replace("psna_rcr ", "");
+                        LoadedConfig = JsonConvert.DeserializeObject<NodeConfig>(json);
+
+                        LabelID.Content = "Node ID/MAC Address: " + LoadedConfig.Identifier;
+                        TextBoxNetworkName.Text = LoadedConfig.NetworkName;
+                        CheckBoxIsEnterprise.IsChecked = LoadedConfig.IsEnterpriseNetwork;
+                        TextBoxNetworkUsername.Text = LoadedConfig.NetworkUsername;
+                        TextBoxNetworkPassword.Text = LoadedConfig.NetworkPassword;
+                        TextBoxLoggerAddress.Text = LoadedConfig.LoggerAddress;
+                        TextBoxLoggerPort.Text = LoadedConfig.LoggerPort.ToString();
+                        SliderNetworkConnectTimeout.Value = LoadedConfig.NetworkConnectTimeout;
+                        SliderLoggerConnectTimeout.Value = LoadedConfig.LoggerConnectTimeout;
+                        SliderLoggerSubscribeTimeout.Value = LoadedConfig.LoggerSubscribeTimeout;
+                        SliderLoggerSessionTimeout.Value = LoadedConfig.LoggerSessionTimeout;
+                        SliderLoggerReportTimeout.Value = LoadedConfig.LoggerReportTimeout;
+
+                        GridConfigOverlay.Visibility = Visibility.Visible;
+                    }
+                }
+            }
+            catch
+            {
+                if (Port != null)
+                {
+                    Port.Close();
+                    Port = null;
+                    LoadedConfig = null;
+                }
+            }
+        }
+        private string WaitForSerialMessage()
+        {
+            string message = "";
+            bool message_ended = false;
+
+            while (!message_ended)
+            {
+                while (Port.BytesToRead > 0)
+                {
+                    char readChar = (char)Port.ReadChar();
+
+                    if (readChar != '\n')
+                        message += readChar;
+                    else message_ended = true;
+                }
+            }
+
+            Console.WriteLine(message);
+            return message;
         }
     }
 }
