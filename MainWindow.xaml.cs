@@ -1,63 +1,137 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.IO.Ports;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interop;
+using static psn_node_admin.DeviceWatcher;
 
 namespace psn_node_admin
 {
     public partial class MainWindow : Window
     {
-        private SerialPort Port = null;
-        private NodeConfig LoadedConfig = null;
+        private DeviceWatcher Devices = new DeviceWatcher();
+
+        private bool isSessionOpen = false;
+        private SerialPort DevicePort = null;
+        private NodeConfig DeviceConfig;
 
         public MainWindow()
         {
             InitializeComponent();
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
+
+        protected override void OnSourceInitialized(EventArgs e)
         {
+            base.OnSourceInitialized(e);
+            HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
 
-        }
-
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            SerialDeviceConnected();
-        }
-
-
-        private void ButtonSave_Click(object sender, RoutedEventArgs e)
-        {
-            NodeConfig newConfig = new NodeConfig();
-            newConfig.NetworkName = TextBoxNetworkName.Text;
-            newConfig.IsEnterpriseNetwork = (bool)CheckBoxIsEnterprise.IsChecked;
-            newConfig.NetworkUsername = TextBoxNetworkUsername.Text;
-            newConfig.NetworkPassword = TextBoxNetworkPassword.Text;
-            newConfig.LoggerAddress = TextBoxLoggerAddress.Text;
-            newConfig.LoggerPort = Convert.ToUInt16(TextBoxLoggerPort.Text);
-            newConfig.NetworkConnectTimeout = (byte)SliderNetworkConnectTimeout.Value;
-            newConfig.LoggerConnectTimeout = (byte)SliderLoggerConnectTimeout.Value;
-            newConfig.LoggerSubscribeTimeout = (byte)SliderLoggerSubscribeTimeout.Value;
-            newConfig.LoggerSessionTimeout = (byte)SliderLoggerSessionTimeout.Value;
-            newConfig.LoggerReportTimeout = (byte)SliderLoggerReportTimeout.Value;
-
-            Console.WriteLine(newConfig.ToString());
-            Port.Write("psna_wc " + newConfig.ToString() + '\n');
-            WaitForSerialMessage();
-
-            ButtonCancel_Click(this, new RoutedEventArgs());
-        }
-        private void ButtonCancel_Click(object sender, RoutedEventArgs e)
-        {
-            if (Port != null)
+            // Register for device change messages
+            if (source != null)
             {
-                Port.Close();
-                Port = null;
+                Devices.DeviceAdded += Devices_DeviceAdded;
+                Devices.DeviceRemoved += Devices_DeviceRemoved;
+                Devices.StartWatching(source);
+            }
+        }
+        private void Devices_DeviceAdded(object sender, DeviceChangedEventArgs e)
+        {
+            if (!IsLoaded) return;
+            if (isSessionOpen) return;
+            isSessionOpen = true;
+
+            Thread.Sleep(100);
+            if (ConnectToDevice(e.DeviceID))
+            {
+                if (GetDeviceConfig())
+                {
+                    LabelID.Content = "Node ID/MAC Address: " + DeviceConfig.Identifier;
+                    TextBoxNetworkName.Text = DeviceConfig.NetworkName;
+                    CheckBoxIsEnterprise.IsChecked = DeviceConfig.IsEnterpriseNetwork;
+                    TextBoxNetworkUsername.Text = DeviceConfig.NetworkUsername;
+                    PasswordBoxNetworkPassword.Password = DeviceConfig.NetworkPassword;
+                    TextBoxLoggerAddress.Text = DeviceConfig.LoggerAddress;
+                    TextBoxLoggerPort.Text = DeviceConfig.LoggerPort.ToString();
+                    SliderNetworkConnectTimeout.Value = DeviceConfig.NetworkConnectTimeout;
+                    SliderLoggerConnectTimeout.Value = DeviceConfig.LoggerConnectTimeout;
+                    SliderLoggerSubscribeTimeout.Value = DeviceConfig.LoggerSubscribeTimeout;
+                    SliderLoggerSessionTimeout.Value = DeviceConfig.LoggerSessionTimeout;
+                    SliderLoggerReportTimeout.Value = DeviceConfig.LoggerReportTimeout;
+                    GridConfigOverlay.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    if (DevicePort != null)
+                    {
+                        DevicePort.Close();
+                        DevicePort = null;
+                        isSessionOpen = false;
+                    }
+                }
+            }
+            else
+            {
+                if (DevicePort != null)
+                {
+                    DevicePort.Close();
+                    DevicePort = null;
+                    isSessionOpen = false;
+                }
+            }
+        }
+        private void Devices_DeviceRemoved(object sender, DeviceChangedEventArgs e)
+        {
+            if (!IsLoaded) return;
+
+            if (isSessionOpen &&
+                DevicePort != null && DevicePort.PortName == e.DeviceID)
+            {
+                DevicePort.Close();
+                DevicePort = null;
+                DeviceConfig = null;
+                GridConfigOverlay.Visibility = Visibility.Hidden;
+                isSessionOpen = false;
+            }
+        }
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            Devices.StopWatching();
+        }
+
+        private bool ConnectToDevice(string comPort)
+        {
+            try
+            {
+                DevicePort = new SerialPort(
+                    comPort, 9600, Parity.None, 8, StopBits.One);
+                DevicePort.Open();
+
+                // Send command to check if the device is a PSN node
+                DevicePort.Write("psna_sc\n");
+
+                if (WaitForSerialMessage() == "psna_scr")
+                    return true;
+            }
+            catch { }
+
+            return false;
+        }
+        private bool GetDeviceConfig()
+        {
+            DevicePort.Write("psna_rc\n");
+            string response = WaitForSerialMessage();
+
+            // Deserialise returned JSON message
+            if (response.StartsWith("psna_rcr {"))
+            {
+                string json = response.Replace("psna_rcr ", "");
+                DeviceConfig = JsonConvert.DeserializeObject<NodeConfig>(json);
+                return true;
             }
 
-            LoadedConfig = null;
-            GridConfigOverlay.Visibility = Visibility.Hidden;
+            return false;
         }
 
         private void TextBoxNetworkName_TextChanged(object sender, TextChangedEventArgs e)
@@ -74,7 +148,7 @@ namespace psn_node_admin
         {
             ValidateFields();
         }
-        private void TextBoxNetworkPassword_TextChanged(object sender, TextChangedEventArgs e)
+        private void PasswordBoxNetworkPassword_PasswordChanged(object sender, RoutedEventArgs e)
         {
             ValidateFields();
         }
@@ -94,7 +168,7 @@ namespace psn_node_admin
                 if (!(bool)CheckBoxIsEnterprise.IsChecked ||
                     ((bool)CheckBoxIsEnterprise.IsChecked && TextBoxNetworkUsername.Text.Length > 0))
                 {
-                    if (TextBoxNetworkPassword.Text.Length > 0)
+                    if (PasswordBoxNetworkPassword.Password.Length > 0)
                     {
                         if (TextBoxLoggerAddress.Text.Length > 0)
                         {
@@ -111,55 +185,39 @@ namespace psn_node_admin
             ButtonSave.IsEnabled = false;
         }
 
-        private void SerialDeviceConnected()
+        private void ButtonSave_Click(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                Port = new SerialPort("COM4", 9600, Parity.None, 8, StopBits.One);
-                Port.Open();
+            NodeConfig newConfig = new NodeConfig();
+            newConfig.NetworkName = TextBoxNetworkName.Text;
+            newConfig.IsEnterpriseNetwork = (bool)CheckBoxIsEnterprise.IsChecked;
+            newConfig.NetworkUsername = TextBoxNetworkUsername.Text;
+            newConfig.NetworkPassword = PasswordBoxNetworkPassword.Password;
+            newConfig.LoggerAddress = TextBoxLoggerAddress.Text;
+            newConfig.LoggerPort = Convert.ToUInt16(TextBoxLoggerPort.Text);
+            newConfig.NetworkConnectTimeout = (byte)SliderNetworkConnectTimeout.Value;
+            newConfig.LoggerConnectTimeout = (byte)SliderLoggerConnectTimeout.Value;
+            newConfig.LoggerSubscribeTimeout = (byte)SliderLoggerSubscribeTimeout.Value;
+            newConfig.LoggerSessionTimeout = (byte)SliderLoggerSessionTimeout.Value;
+            newConfig.LoggerReportTimeout = (byte)SliderLoggerReportTimeout.Value;
 
-                // Send start communication (SC) command to check if device is a PSN node
-                Port.Write("psna_sc\n");
+            Console.WriteLine(newConfig.ToString());
+            DevicePort.Write("psna_wc " + newConfig.ToString() + '\n');
+            WaitForSerialMessage();
 
-                // Received SC command response so send read config (RC) command
-                if (WaitForSerialMessage() == "psna_scr")
-                {
-                    Port.Write("psna_rc\n");
-                    string rcResponse = WaitForSerialMessage();
-
-                    // Received RC command response with JSON data. Display to user
-                    if (rcResponse.StartsWith("psna_rcr {"))
-                    {
-                        string json = rcResponse.Replace("psna_rcr ", "");
-                        LoadedConfig = JsonConvert.DeserializeObject<NodeConfig>(json);
-
-                        LabelID.Content = "Node ID/MAC Address: " + LoadedConfig.Identifier;
-                        TextBoxNetworkName.Text = LoadedConfig.NetworkName;
-                        CheckBoxIsEnterprise.IsChecked = LoadedConfig.IsEnterpriseNetwork;
-                        TextBoxNetworkUsername.Text = LoadedConfig.NetworkUsername;
-                        TextBoxNetworkPassword.Text = LoadedConfig.NetworkPassword;
-                        TextBoxLoggerAddress.Text = LoadedConfig.LoggerAddress;
-                        TextBoxLoggerPort.Text = LoadedConfig.LoggerPort.ToString();
-                        SliderNetworkConnectTimeout.Value = LoadedConfig.NetworkConnectTimeout;
-                        SliderLoggerConnectTimeout.Value = LoadedConfig.LoggerConnectTimeout;
-                        SliderLoggerSubscribeTimeout.Value = LoadedConfig.LoggerSubscribeTimeout;
-                        SliderLoggerSessionTimeout.Value = LoadedConfig.LoggerSessionTimeout;
-                        SliderLoggerReportTimeout.Value = LoadedConfig.LoggerReportTimeout;
-
-                        GridConfigOverlay.Visibility = Visibility.Visible;
-                    }
-                }
-            }
-            catch
-            {
-                if (Port != null)
-                {
-                    Port.Close();
-                    Port = null;
-                    LoadedConfig = null;
-                }
-            }
+            ButtonCancel_Click(this, new RoutedEventArgs());
         }
+        private void ButtonCancel_Click(object sender, RoutedEventArgs e)
+        {
+            if (DevicePort != null)
+            {
+                DevicePort.Close();
+                DevicePort = null;
+            }
+
+            DeviceConfig = null;
+            GridConfigOverlay.Visibility = Visibility.Hidden;
+        }
+
         private string WaitForSerialMessage()
         {
             string message = "";
@@ -167,9 +225,9 @@ namespace psn_node_admin
 
             while (!message_ended)
             {
-                while (Port.BytesToRead > 0)
+                while (DevicePort.BytesToRead > 0)
                 {
-                    char readChar = (char)Port.ReadChar();
+                    char readChar = (char)DevicePort.ReadChar();
 
                     if (readChar != '\n')
                         message += readChar;
