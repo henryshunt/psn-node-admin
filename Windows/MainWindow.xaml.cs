@@ -42,6 +42,7 @@ namespace PSNNodeAdmin.Windows
         {
             if (!IsLoaded) return;
             if (isConnecting) return;
+            if (DevicePort != null) return;
             isConnecting = true;
 
             Thread.Sleep(100);
