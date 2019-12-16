@@ -5,8 +5,8 @@ namespace psn_node_admin
 {
     public class NodeConfig
     {
-        [JsonProperty("id")]
-        public string Identifier { get; set; }
+        [JsonProperty("madr")]
+        public string MACAddress { get; set; }
 
         [JsonProperty("nent")]
         public bool IsEnterpriseNetwork { get; set; }
@@ -20,7 +20,7 @@ namespace psn_node_admin
         [JsonProperty("ladr")]
         public string LoggerAddress { get; set; }
         [JsonProperty("lprt")]
-        public UInt16 LoggerPort { get; set; }
+        public ushort LoggerPort { get; set; }
 
         [JsonProperty("tncn")]
         public byte NetworkConnectTimeout { get; set; }
@@ -36,15 +36,16 @@ namespace psn_node_admin
 
         public override string ToString()
         {
-            string json = "{ \"nent\": " + Convert.ToInt16(IsEnterpriseNetwork)
-                + ", \"nnam\": \"" + NetworkName + "\", \"nunm\": \"" + NetworkUsername
-                + "\", \"npwd\": \"" + NetworkPassword + "\", \"ladr\": \""
-                + LoggerAddress + "\", \"lprt\": " + LoggerPort + ", \"tncn\": "
-                + NetworkConnectTimeout + ", \"tlcn\": " + LoggerConnectTimeout
-                + ", \"tlsb\": " + LoggerSubscribeTimeout + ", \"tlss\": "
-                + LoggerSessionTimeout + ", \"tlrp\": " + LoggerReportTimeout + " }";
+            string jsonTemplate = "{{ \"nent\": {0}, \"nnam\": \"{1}\", \"nunm\": "
+                + "\"{2}\", \"npwd\": \"{3}\", \"ladr\": \"{4}\", \"lprt\": {5}, "
+                + "\"tncn\": {6}, \"tlcn\": {7}, \"tlsb\": {8}, \"tlss\": {9}, "
+                + "\"tlrp\": {10} }}";
 
-            json = json.Replace("\"\"", "null");
+            string json = string.Format(jsonTemplate,
+                Convert.ToInt16(IsEnterpriseNetwork), NetworkName, NetworkUsername,
+                NetworkPassword, LoggerAddress, LoggerPort, NetworkConnectTimeout,
+                LoggerConnectTimeout, LoggerSubscribeTimeout, LoggerSessionTimeout,
+                LoggerReportTimeout);
             return json;
         }
     }

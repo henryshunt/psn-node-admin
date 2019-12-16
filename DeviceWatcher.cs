@@ -25,6 +25,8 @@ namespace psn_node_admin
         public event EventHandler<DeviceChangedEventArgs> DeviceAdded;
         public event EventHandler<DeviceChangedEventArgs> DeviceRemoved;
 
+        private object MessageHandleLock = new object();
+
         public DeviceWatcher()
         {
 
@@ -60,13 +62,16 @@ namespace psn_node_admin
 
                 if (dbdi.Name.StartsWith("\\\\?\\")) // Ignore invalid false positives
                 {
-                    Interlocked.Increment(ref MessagesToProcess);
-                    if (!isHandlingMessage)
+                    lock (MessageHandleLock)
                     {
-                        isHandlingMessage = true;
+                        MessagesToProcess++;
+                        if (!isHandlingMessage)
+                        {
+                            isHandlingMessage = true;
 
-                        // Handle message in new thread to allow this method to return
-                        new Thread(delegate () { DevicesChanged(); }).Start();
+                            // Handle message in new thread to allow this method to return
+                            new Thread(delegate () { DevicesChanged(); }).Start();
+                        }
                     }
                 }
             }
@@ -105,12 +110,19 @@ namespace psn_node_admin
             }
 
             devices = newDevices;
-            Interlocked.Decrement(ref MessagesToProcess);
+            lock (MessageHandleLock)
+            {
+                MessagesToProcess--;
 
-            // Could have received another message while processing this message
-            if (MessagesToProcess == 0)
-                isHandlingMessage = false;
-            else DevicesChanged();
+                // Could have received another message while processing this message
+                if (MessagesToProcess == 0)
+                {
+                    isHandlingMessage = false;
+                    return;
+                }
+            }
+
+            DevicesChanged();
         }
 
         private List<string> GetDevices()
