@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace psn_node_admin
+namespace PSNNodeAdmin
 {
     /// <summary>
     /// Interaction logic for App.xaml

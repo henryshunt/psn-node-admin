@@ -1,7 +1,7 @@
-﻿<Window x:Class="psn_node_admin.MainWindow"
+﻿<Window x:Class="PSNNodeAdmin.Windows.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="PSN Node Admin" Width="450" MinHeight="350" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" SizeToContent="Height" Closed="Window_Closed">
+        Title="PSN Node Administrator" Width="450" MinHeight="350" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" SizeToContent="Height" Closed="Window_Closed">
 
     <Grid Margin="0,0,0,10">
         <StackPanel x:Name="StackPanelPrompt" VerticalAlignment="Center" HorizontalAlignment="Center" Width="280">

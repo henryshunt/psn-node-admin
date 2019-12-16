@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 
-namespace psn_node_admin
+namespace PSNNodeAdmin.Routines
 {
     public class NodeConfig
     {

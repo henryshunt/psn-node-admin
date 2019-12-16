@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using PSNNodeAdmin.Routines;
 using System;
 using System.Diagnostics;
 using System.IO.Ports;
@@ -6,9 +7,8 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
-using static psn_node_admin.DeviceWatcher;
 
-namespace psn_node_admin
+namespace PSNNodeAdmin.Windows
 {
     public partial class MainWindow : Window
     {
@@ -37,7 +37,8 @@ namespace psn_node_admin
                 Devices.StartWatching(source);
             }
         }
-        private void Devices_DeviceAdded(object sender, DeviceChangedEventArgs e)
+        private void Devices_DeviceAdded(
+            object sender, DeviceWatcher.DeviceChangedEventArgs e)
         {
             if (!IsLoaded) return;
             if (isConnecting) return;
@@ -85,7 +86,8 @@ namespace psn_node_admin
                 }
             }
         }
-        private void Devices_DeviceRemoved(object sender, DeviceChangedEventArgs e)
+        private void Devices_DeviceRemoved(
+            object sender, DeviceWatcher.DeviceChangedEventArgs e)
         {
             if (!IsLoaded) return;
             if (isConnecting) return;

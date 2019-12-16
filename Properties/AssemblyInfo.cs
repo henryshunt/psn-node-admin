@@ -7,12 +7,12 @@ using System.Windows;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("psn-node-admin")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("PSN Node Administrator")]
+[assembly: AssemblyDescription("Manage the configuration data stored on PSN nodes")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("psn-node-admin")]
-[assembly: AssemblyCopyright("Copyright ©  2019")]
+[assembly: AssemblyCompany("Henry Hunt")]
+[assembly: AssemblyProduct("PSN Node Administrator")]
+[assembly: AssemblyCopyright("Copyright © Henry Hunt 2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

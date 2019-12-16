@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace psn_node_admin
+namespace PSNNodeAdmin.Routines
 {
     // Developed in tandem with a very similar class in https://github.com/henryshunt/dcim-ingester
     // Original code from https://stackoverflow.com/questions/1976573/using-registerdevicenotification-in-a-net-app

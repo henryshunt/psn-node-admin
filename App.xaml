@@ -1,7 +1,7 @@
-﻿<Application x:Class="psn_node_admin.App"
+﻿<Application x:Class="PSNNodeAdmin.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="MainWindow.xaml">
+             StartupUri="Windows/MainWindow.xaml">
     
     <Application.Resources>
         <BorderGapMaskConverter x:Key="BorderGapMaskConverter"/>
