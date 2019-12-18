@@ -60,7 +60,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Routines\DeviceChangeWatcher.cs" />
-    <Compile Include="Routines\DeviceWatcher.cs" />
+    <Compile Include="Routines\SerialPortWatcher.cs" />
     <Page Include="Windows\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

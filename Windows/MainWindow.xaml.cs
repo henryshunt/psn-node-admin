@@ -7,12 +7,13 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
+using static PSNNodeAdmin.Routines.SerialPortWatcher;
 
 namespace PSNNodeAdmin.Windows
 {
     public partial class MainWindow : Window
     {
-        private DeviceWatcher Devices = new DeviceWatcher();
+        private SerialPortWatcher SerialPorts = new SerialPortWatcher();
 
         private bool isConnecting = false;
         private SerialPort DevicePort = null;
@@ -32,13 +33,12 @@ namespace PSNNodeAdmin.Windows
             // Register for device change messages
             if (source != null)
             {
-                Devices.DeviceAdded += Devices_DeviceAdded;
-                Devices.DeviceRemoved += Devices_DeviceRemoved;
-                Devices.StartWatching(source);
+                SerialPorts.SerialPortAdded += SerialPorts_SerialPortAdded;
+                SerialPorts.SerialPortRemoved += SerialPorts_SerialPortRemoved;
+                SerialPorts.StartWatching(source);
             }
         }
-        private void Devices_DeviceAdded(
-            object sender, DeviceWatcher.DeviceChangedEventArgs e)
+        private void SerialPorts_SerialPortAdded(object sender, SerialPortChangedEventArgs e)
         {
             if (!IsLoaded) return;
             if (isConnecting) return;
@@ -46,7 +46,7 @@ namespace PSNNodeAdmin.Windows
             isConnecting = true;
 
             Thread.Sleep(100);
-            if (ConnectToDevice(e.DeviceID))
+            if (ConnectToDevice(e.SerialPortID))
             {
                 if (GetDeviceConfig())
                 {
@@ -87,13 +87,12 @@ namespace PSNNodeAdmin.Windows
                 }
             }
         }
-        private void Devices_DeviceRemoved(
-            object sender, DeviceWatcher.DeviceChangedEventArgs e)
+        private void SerialPorts_SerialPortRemoved(object sender, SerialPortChangedEventArgs e)
         {
             if (!IsLoaded) return;
             if (isConnecting) return;
 
-            if (DevicePort != null && DevicePort.PortName == e.DeviceID)
+            if (DevicePort != null && DevicePort.PortName == e.SerialPortID)
             {
                 DevicePort.Close();
                 DevicePort = null;
@@ -104,7 +103,7 @@ namespace PSNNodeAdmin.Windows
         }
         private void Window_Closed(object sender, EventArgs e)
         {
-            Devices.StopWatching();
+            SerialPorts.StopWatching();
 
             if (DevicePort != null)
                 DevicePort.Close();

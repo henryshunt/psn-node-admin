@@ -11,23 +11,25 @@ namespace PSNNodeAdmin.Routines
 {
     // Developed in tandem with a very similar class in https://github.com/henryshunt/dcim-ingester
     // Original code from https://stackoverflow.com/questions/1976573/using-registerdevicenotification-in-a-net-app
-    public class DeviceWatcher
+    public class SerialPortWatcher
     {
-        private List<string> devices = new List<string>();
-        public IReadOnlyCollection<string> Devices
+        private DeviceChangeWatcher DeviceWatcher = new DeviceChangeWatcher();
+
+        private List<string> serialPorts = new List<string>();
+        public IReadOnlyCollection<string> SerialPorts
         {
-            get { return devices.AsReadOnly(); }
+            get { return serialPorts.AsReadOnly(); }
         }
 
         private int MessagesToProcess = 0;
         bool isHandlingMessage = false;
 
-        public event EventHandler<DeviceChangedEventArgs> DeviceAdded;
-        public event EventHandler<DeviceChangedEventArgs> DeviceRemoved;
+        public event EventHandler<SerialPortChangedEventArgs> SerialPortAdded;
+        public event EventHandler<SerialPortChangedEventArgs> SerialPortRemoved;
 
         private object MessageHandleLock = new object();
 
-        public DeviceWatcher()
+        public SerialPortWatcher()
         {
 
         }
@@ -36,15 +38,15 @@ namespace PSNNodeAdmin.Routines
         public void StartWatching(HwndSource windowHandle)
         {
             windowHandle.AddHook(WindowMessageHandler);
-            devices = GetDevices();
+            serialPorts = GetSerialPorts();
 
-            new DeviceChangeWatcher().RegisterDeviceNotification(windowHandle.Handle,
-                new Guid("A5DCBF10-6530-11D2-901F-00C04FB951ED")); // USB devices
+            DeviceWatcher.RegisterDeviceNotification(windowHandle.Handle,
+                new Guid("86E0D1E0-8089-11D0-9CE4-08003E301F73")); // COM ports
         }
         public void StopWatching()
         {
-            new DeviceChangeWatcher().UnregisterDeviceNotification();
-            devices = null;
+            DeviceWatcher.UnregisterDeviceNotification();
+            serialPorts = null;
         }
 
         private IntPtr WindowMessageHandler(
@@ -70,7 +72,7 @@ namespace PSNNodeAdmin.Routines
                             isHandlingMessage = true;
 
                             // Handle message in new thread to allow this method to return
-                            new Thread(delegate () { DevicesChanged(); }).Start();
+                            new Thread(delegate () { SerialPortsChanged(); }).Start();
                         }
                     }
                 }
@@ -79,37 +81,37 @@ namespace PSNNodeAdmin.Routines
             handled = false;
             return IntPtr.Zero;
         }
-        private void DevicesChanged()
+        private void SerialPortsChanged()
         {
-            List<string> newDevices = GetDevices();
+            List<string> newSerialPorts = GetSerialPorts();
 
-            // Check for any added devices
-            foreach (string device in newDevices)
+            // Check for any added serial ports
+            foreach (string serialPort in newSerialPorts)
             {
-                if (!Devices.Contains(device))
+                if (!SerialPorts.Contains(serialPort))
                 {
                     Application.Current.Dispatcher.Invoke(delegate ()
                     {
-                        DeviceAdded?.Invoke(this,
-                            new DeviceChangedEventArgs(device));
+                        SerialPortAdded?.Invoke(
+                            this, new SerialPortChangedEventArgs(serialPort));
                     });
                 }
             }
 
-            // Check for any removed devices
-            foreach (string device in Devices)
+            // Check for any removed serial ports
+            foreach (string serialPort in SerialPorts)
             {
-                if (!newDevices.Contains(device))
+                if (!newSerialPorts.Contains(serialPort))
                 {
                     Application.Current.Dispatcher.Invoke(delegate ()
                     {
-                        DeviceRemoved?.Invoke(
-                            this, new DeviceChangedEventArgs(device));
+                        SerialPortRemoved?.Invoke(
+                            this, new SerialPortChangedEventArgs(serialPort));
                     });
                 }
             }
 
-            devices = newDevices;
+            serialPorts = newSerialPorts;
             lock (MessageHandleLock)
             {
                 MessagesToProcess--;
@@ -122,28 +124,28 @@ namespace PSNNodeAdmin.Routines
                 }
             }
 
-            DevicesChanged();
+            SerialPortsChanged();
         }
 
-        private List<string> GetDevices()
+        private List<string> GetSerialPorts()
         {
-            List<string> newDevices = new List<string>();
+            List<string> newSerialPorts = new List<string>();
             ManagementObjectSearcher query = new ManagementObjectSearcher(
                 "SELECT DeviceID FROM Win32_SerialPort");
 
-            foreach (ManagementObject device in query.Get())
-                newDevices.Add(device["DeviceID"].ToString());
-            return newDevices;
+            foreach (ManagementObject serialPort in query.Get())
+                newSerialPorts.Add(serialPort["DeviceID"].ToString());
+            return newSerialPorts;
         }
 
 
-        public class DeviceChangedEventArgs : EventArgs
+        public class SerialPortChangedEventArgs : EventArgs
         {
-            public string DeviceID { get; private set; }
+            public string SerialPortID { get; private set; }
 
-            public DeviceChangedEventArgs(string deviceId)
+            public SerialPortChangedEventArgs(string serialPortID)
             {
-                DeviceID = deviceId;
+                SerialPortID = serialPortID;
             }
         }
     }
