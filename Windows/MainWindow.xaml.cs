@@ -28,14 +28,15 @@ namespace PSNNodeAdmin.Windows
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
-            HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+            HwndSource windowHandle
+                = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
 
             // Register for device change messages
-            if (source != null)
+            if (windowHandle != null)
             {
                 SerialPorts.SerialPortAdded += SerialPorts_SerialPortAdded;
                 SerialPorts.SerialPortRemoved += SerialPorts_SerialPortRemoved;
-                SerialPorts.StartWatching(source);
+                SerialPorts.StartWatching(windowHandle);
             }
         }
         private void SerialPorts_SerialPortAdded(object sender, SerialPortChangedEventArgs e)
