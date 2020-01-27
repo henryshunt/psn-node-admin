@@ -58,11 +58,8 @@ namespace PSNNodeAdmin.Windows
                     PasswordBoxNetworkPassword.Password = DeviceConfig.NetworkPassword;
                     TextBoxLoggerAddress.Text = DeviceConfig.LoggerAddress;
                     TextBoxLoggerPort.Text = DeviceConfig.LoggerPort.ToString();
-                    SliderNetworkConnectTimeout.Value = DeviceConfig.NetworkConnectTimeout;
-                    SliderLoggerConnectTimeout.Value = DeviceConfig.LoggerConnectTimeout;
-                    SliderLoggerSubscribeTimeout.Value = DeviceConfig.LoggerSubscribeTimeout;
-                    SliderLoggerSessionTimeout.Value = DeviceConfig.LoggerSessionTimeout;
-                    SliderLoggerReportTimeout.Value = DeviceConfig.LoggerReportTimeout;
+                    SliderNetworkTimeout.Value = DeviceConfig.NetworkTimeout;
+                    SliderLoggerTimeout.Value = DeviceConfig.LoggerTimeout;
 
                     ButtonSave.IsEnabled = false;
                     GridConfigOverlay.Visibility = Visibility.Visible;
@@ -178,11 +175,8 @@ namespace PSNNodeAdmin.Windows
             newConfig.NetworkPassword = PasswordBoxNetworkPassword.Password;
             newConfig.LoggerAddress = TextBoxLoggerAddress.Text;
             newConfig.LoggerPort = Convert.ToUInt16(TextBoxLoggerPort.Text);
-            newConfig.NetworkConnectTimeout = (byte)SliderNetworkConnectTimeout.Value;
-            newConfig.LoggerConnectTimeout = (byte)SliderLoggerConnectTimeout.Value;
-            newConfig.LoggerSubscribeTimeout = (byte)SliderLoggerSubscribeTimeout.Value;
-            newConfig.LoggerSessionTimeout = (byte)SliderLoggerSessionTimeout.Value;
-            newConfig.LoggerReportTimeout = (byte)SliderLoggerReportTimeout.Value;
+            newConfig.NetworkTimeout = (byte)SliderNetworkTimeout.Value;
+            newConfig.LoggerTimeout = (byte)SliderLoggerTimeout.Value;
 
             try
             {

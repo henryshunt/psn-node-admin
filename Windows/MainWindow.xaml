@@ -55,39 +55,18 @@
 
                 <Grid Margin="5,8,5,5">
                     <TextBlock VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left" Width="239">
-                        <Run Text="Network Connect Timeout"/>
+                        <Run Text="Network Connection Timeout"/>
                         <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="Time to wait before aborting network connection attempt"/>
                     </TextBlock>
-                    <Slider x:Name="SliderNetworkConnectTimeout" Margin="0,20,23,0" VerticalAlignment="Top" Minimum="1" Maximum="20" IsSnapToTickEnabled="True" ValueChanged="SliderField_ValueChanged"/>
-                    <Label Content="{Binding ElementName=SliderNetworkConnectTimeout, Path=Value}" ContentStringFormat="{}{0}s" Margin="0,20,0,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" Padding="0" HorizontalAlignment="Right" Width="18"/>
+                    <Slider x:Name="SliderNetworkTimeout" Margin="0,20,23,0" VerticalAlignment="Top" Minimum="1" Maximum="20" IsSnapToTickEnabled="True" ValueChanged="SliderField_ValueChanged"/>
+                    <Label Content="{Binding ElementName=SliderNetworkTimeout, Path=Value}" ContentStringFormat="{}{0}s" Margin="0,20,0,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" Padding="0" HorizontalAlignment="Right" Width="18"/>
 
                     <TextBlock Margin="0,44,0,0" VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left" Width="226">
-                        <Run Text="Logger Connect Timeout"/>
-                        <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="Time to wait before aborting logger connection attempt"/>
+                        <Run Text="Logging Server Operation Timeout"/>
+                        <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="Time to wait before aborting any attempt to contact the logging server"/>
                     </TextBlock>
-                    <Slider x:Name="SliderLoggerConnectTimeout" Margin="0,64,23,0" VerticalAlignment="Top" Minimum="1" Maximum="20" IsSnapToTickEnabled="True" ValueChanged="SliderField_ValueChanged"/>
-                    <Label Content="{Binding ElementName=SliderLoggerConnectTimeout, Path=Value}" ContentStringFormat="{}{0}s" Margin="0,64,0,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" Padding="0" HorizontalAlignment="Right" Width="18"/>
-
-                    <TextBlock Margin="0,86,0,-4" VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left" Width="235">
-                        <Run Text="Logger Subscribe Timeout"/>
-                        <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="Time to wait before aborting second part of logger connection attempt"/>
-                    </TextBlock>
-                    <Slider x:Name="SliderLoggerSubscribeTimeout" Margin="0,106,23,0" VerticalAlignment="Top" Minimum="1" Maximum="20" IsSnapToTickEnabled="True" ValueChanged="SliderField_ValueChanged"/>
-                    <Label Content="{Binding ElementName=SliderLoggerSubscribeTimeout, Path=Value}" ContentStringFormat="{}{0}s" Margin="0,106,0,-22" VerticalAlignment="Top" HorizontalContentAlignment="Center" Padding="0" HorizontalAlignment="Right" Width="18"/>
-
-                    <TextBlock Margin="0,130,0,-48" VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left" Width="254">
-                        <Run Text="Logger Session Request Timeout"/>
-                        <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="Time to wait before aborting request to get the session for this node"/>
-                    </TextBlock>
-                    <Slider x:Name="SliderLoggerSessionTimeout" Margin="0,150,23,0" VerticalAlignment="Top" Minimum="1" Maximum="20" IsSnapToTickEnabled="True" ValueChanged="SliderField_ValueChanged"/>
-                    <Label Content="{Binding ElementName=SliderLoggerSessionTimeout, Path=Value}" ContentStringFormat="{}{0}s" Margin="0,150,0,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" Padding="0" HorizontalAlignment="Right" Width="18"/>
-
-                    <TextBlock Margin="0,172,0,-90" VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left" Width="212">
-                        <Run Text="Logger Report Transmit Timeout"/>
-                        <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="Time to wait before aborting attempt to transmit report. Reports are retained until successfully transmitted"/>
-                    </TextBlock>
-                    <Slider x:Name="SliderLoggerReportTimeout" Margin="0,192,23,0" VerticalAlignment="Top" Minimum="1" Maximum="20" IsSnapToTickEnabled="True" ValueChanged="SliderField_ValueChanged"/>
-                    <Label Content="{Binding ElementName=SliderLoggerReportTimeout, Path=Value}" ContentStringFormat="{}{0}s" Margin="0,192,0,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" Padding="0" HorizontalAlignment="Right" Width="18"/>
+                    <Slider x:Name="SliderLoggerTimeout" Margin="0,64,23,0" VerticalAlignment="Top" Minimum="1" Maximum="20" IsSnapToTickEnabled="True" ValueChanged="SliderField_ValueChanged"/>
+                    <Label Content="{Binding ElementName=SliderLoggerTimeout, Path=Value}" ContentStringFormat="{}{0}s" Margin="0,64,0,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" Padding="0" HorizontalAlignment="Right" Width="18"/>
                 </Grid>
             </GroupBox>
 

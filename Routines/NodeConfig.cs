@@ -22,30 +22,22 @@ namespace PSNNodeAdmin.Routines
         [JsonProperty("lprt")]
         public ushort LoggerPort { get; set; }
 
-        [JsonProperty("tncn")]
-        public byte NetworkConnectTimeout { get; set; }
-        [JsonProperty("tlcn")]
-        public byte LoggerConnectTimeout { get; set; }
-        [JsonProperty("tlsb")]
-        public byte LoggerSubscribeTimeout { get; set; }
-        [JsonProperty("tlss")]
-        public byte LoggerSessionTimeout { get; set; }
-        [JsonProperty("tlrp")]
-        public byte LoggerReportTimeout { get; set; }
+        [JsonProperty("tnet")]
+        public byte NetworkTimeout { get; set; }
+        [JsonProperty("tlog")]
+        public byte LoggerTimeout { get; set; }
 
 
         public override string ToString()
         {
             string jsonTemplate = "{{ \"nent\": {0}, \"nnam\": \"{1}\", \"nunm\": "
                 + "\"{2}\", \"npwd\": \"{3}\", \"ladr\": \"{4}\", \"lprt\": {5}, "
-                + "\"tncn\": {6}, \"tlcn\": {7}, \"tlsb\": {8}, \"tlss\": {9}, "
-                + "\"tlrp\": {10} }}";
+                + "\"tnet\": {6}, \"tlog\": {7} }}";
 
             string json = string.Format(jsonTemplate,
                 Convert.ToInt16(IsEnterpriseNetwork), NetworkName, NetworkUsername,
-                NetworkPassword, LoggerAddress, LoggerPort, NetworkConnectTimeout,
-                LoggerConnectTimeout, LoggerSubscribeTimeout, LoggerSessionTimeout,
-                LoggerReportTimeout);
+                NetworkPassword, LoggerAddress, LoggerPort, NetworkTimeout,
+                LoggerTimeout);
             return json;
         }
     }
