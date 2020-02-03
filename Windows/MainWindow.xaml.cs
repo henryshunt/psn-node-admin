@@ -1,7 +1,5 @@
-﻿using Newtonsoft.Json;
-using PSNNodeAdmin.Routines;
+﻿using PSNNodeAdmin.Routines;
 using System;
-using System.Diagnostics;
 using System.IO.Ports;
 using System.Threading;
 using System.Windows;
@@ -17,7 +15,6 @@ namespace PSNNodeAdmin.Windows
 
         private bool isConnecting = false;
         private SerialPort DevicePort = null;
-        private NodeConfig DeviceConfig;
 
         public MainWindow()
         {
@@ -28,8 +25,7 @@ namespace PSNNodeAdmin.Windows
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
-            HwndSource windowHandle
-                = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+            HwndSource windowHandle = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
 
             // Register for device change messages
             if (windowHandle != null)
@@ -39,31 +35,36 @@ namespace PSNNodeAdmin.Windows
                 SerialPorts.StartWatching(windowHandle);
             }
         }
+
         private void SerialPorts_SerialPortAdded(object sender, SerialPortChangedEventArgs e)
         {
-            if (!IsLoaded) return;
-            if (isConnecting) return;
-            if (DevicePort != null) return;
+            if (!IsLoaded || isConnecting || DevicePort != null) return;
             isConnecting = true;
 
+            Thread.Sleep(100); // Allow the device to finish starting up
+            DevicePort = Helpers.ConnectToDevice(e.SerialPortID);
             Thread.Sleep(100);
-            if (ConnectToDevice(e.SerialPortID))
+
+            if (DevicePort != null)
             {
-                if (GetDeviceConfig())
+                DeviceConfig config = Helpers.ReadDeviceConfig(DevicePort);
+                if (config != null)
                 {
-                    LabelID.Content = "Node MAC Address: " + DeviceConfig.MACAddress;
-                    TextBoxNetworkName.Text = DeviceConfig.NetworkName;
-                    CheckBoxIsEnterprise.IsChecked = DeviceConfig.IsEnterpriseNetwork;
-                    TextBoxNetworkUsername.Text = DeviceConfig.NetworkUsername;
-                    PasswordBoxNetworkPassword.Password = DeviceConfig.NetworkPassword;
-                    TextBoxLoggerAddress.Text = DeviceConfig.LoggerAddress;
-                    TextBoxLoggerPort.Text = DeviceConfig.LoggerPort.ToString();
-                    SliderNetworkTimeout.Value = DeviceConfig.NetworkTimeout;
-                    SliderLoggerTimeout.Value = DeviceConfig.LoggerTimeout;
+                    LabelID.Content = "Device MAC Address: " + config.MACAddress;
+                    TextBoxNetworkName.Text = config.NetworkName;
+                    CheckBoxIsEnterprise.IsChecked = config.IsEnterpriseNetwork;
+                    TextBoxNetworkUsername.Text = config.NetworkUsername;
+                    PasswordBoxNetworkPassword.Password = config.NetworkPassword;
+                    TextBoxLoggerAddress.Text = config.LoggerAddress;
+                    TextBoxLoggerPort.Text = config.LoggerPort.ToString();
+                    SliderNetworkTimeout.Value = config.NetworkTimeout;
+                    SliderLoggerTimeout.Value = config.LoggerTimeout;
+
+                    LoadDeviceTime(false);
 
                     ButtonSave.IsEnabled = false;
                     GridConfigOverlay.Visibility = Visibility.Visible;
-                    isConnecting = false;
+                    TextBoxNetworkName.Focus();
                 }
                 else
                 {
@@ -73,28 +74,20 @@ namespace PSNNodeAdmin.Windows
                         DevicePort = null;
                         isConnecting = false;
                     }
+
+                    MessageBox.Show("Unable to read device configuration.");
                 }
             }
-            else
-            {
-                if (DevicePort != null)
-                {
-                    DevicePort.Close();
-                    DevicePort = null;
-                    isConnecting = false;
-                }
-            }
+
+            isConnecting = false;
         }
         private void SerialPorts_SerialPortRemoved(object sender, SerialPortChangedEventArgs e)
         {
-            if (!IsLoaded) return;
-            if (isConnecting) return;
-
+            if (!IsLoaded || isConnecting) return;
             if (DevicePort != null && DevicePort.PortName == e.SerialPortID)
             {
                 DevicePort.Close();
                 DevicePort = null;
-                DeviceConfig = null;
 
                 GridConfigOverlay.Visibility = Visibility.Hidden;
             }
@@ -107,89 +100,49 @@ namespace PSNNodeAdmin.Windows
                 DevicePort.Close();
         }
 
-        private void TextBoxField_TextChanged(object sender, TextChangedEventArgs e)
+        private void ButtonRefreshTime_Click(object sender, RoutedEventArgs e)
         {
-            if (!IsLoaded) return;
-            if (GridConfigOverlay.Visibility != Visibility.Visible) return;
-
-            ValidateFields();
+            LoadDeviceTime(true);
         }
-        private void CheckBoxField_CheckedChanged(object sender, RoutedEventArgs e)
+        private void LoadDeviceTime(bool failureMessage)
         {
-            if (!IsLoaded) return;
-            if (GridConfigOverlay.Visibility != Visibility.Visible) return;
-
-            if (!(bool)CheckBoxIsEnterprise.IsChecked)
-                TextBoxNetworkUsername.Text = "";
-            ValidateFields();
-        }
-        private void PasswordBoxField_PasswordChanged(object sender, RoutedEventArgs e)
-        {
-            if (!IsLoaded) return;
-            if (GridConfigOverlay.Visibility != Visibility.Visible) return;
-
-            ValidateFields();
-        }
-        private void SliderField_ValueChanged(
-            object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            if (!IsLoaded) return;
-            if (GridConfigOverlay.Visibility != Visibility.Visible) return;
-
-            ButtonSave.IsEnabled = true;
-        }
-
-        private void ValidateFields()
-        {
-            if (TextBoxNetworkName.Text.Length > 0)
+            DeviceTime time = Helpers.ReadDeviceTime(DevicePort);
+            if (time != null)
             {
-                if (!(bool)CheckBoxIsEnterprise.IsChecked ||
-                    ((bool)CheckBoxIsEnterprise.IsChecked && TextBoxNetworkUsername.Text.Length > 0))
-                {
-                    if (PasswordBoxNetworkPassword.Password.Length > 0)
-                    {
-                        if (TextBoxLoggerAddress.Text.Length > 0)
-                        {
-                            try
-                            {
-                                Convert.ToUInt16(TextBoxLoggerPort.Text);
-
-                                ButtonSave.IsEnabled = true;
-                                return;
-                            }
-                            catch { }
-                        }
-                    }
-                }
+                TextBoxDeviceTime.Text = DateTime.Parse(time.Time).ToString(
+                    "dd/MM/yyyy HH:mm:ss") + " UTC (" + (time.IsTimeValid ? "VALID" : "INVALID") + ")";
             }
-
-            ButtonSave.IsEnabled = false;
+            else
+            {
+                TextBoxDeviceTime.Text = "Unable to read device time";
+                if (failureMessage)
+                    MessageBox.Show("Unable to read device time.");
+            }
+        }
+        private void ButtonResyncTime_Click(object sender, RoutedEventArgs e)
+        {
+            if (Helpers.WriteDeviceTime(DevicePort))
+                LoadDeviceTime(true);
+            else MessageBox.Show("Unable to write time to device.");
         }
 
         private void ButtonSave_Click(object sender, RoutedEventArgs e)
         {
-            NodeConfig newConfig = new NodeConfig();
+            DeviceConfig newConfig = new DeviceConfig();
             newConfig.NetworkName = TextBoxNetworkName.Text;
             newConfig.IsEnterpriseNetwork = (bool)CheckBoxIsEnterprise.IsChecked;
             newConfig.NetworkUsername = TextBoxNetworkUsername.Text;
             newConfig.NetworkPassword = PasswordBoxNetworkPassword.Password;
             newConfig.LoggerAddress = TextBoxLoggerAddress.Text;
-            newConfig.LoggerPort = Convert.ToUInt16(TextBoxLoggerPort.Text);
-            newConfig.NetworkTimeout = (byte)SliderNetworkTimeout.Value;
-            newConfig.LoggerTimeout = (byte)SliderLoggerTimeout.Value;
+            newConfig.LoggerPort = Convert.ToInt32(TextBoxLoggerPort.Text);
+            newConfig.NetworkTimeout = (int)SliderNetworkTimeout.Value;
+            newConfig.LoggerTimeout = (int)SliderLoggerTimeout.Value;
 
-            try
-            {
-                DevicePort.Write("psna_wc " + newConfig.ToString() + '\n');
-
-                string response = WaitForSerialMessage();
-                if (response == "psna_wcs")
-                    ButtonCancel_Click(this, new RoutedEventArgs());
-                else throw new Exception("Write config command did not succeed");
-            }
-            catch { MessageBox.Show("Error while writing configuration to device"); }
+            if (Helpers.WriteDeviceConfig(DevicePort, newConfig))
+                ButtonFinish_Click(this, new RoutedEventArgs());
+            else MessageBox.Show("Unable to write configuration to device.");
         }
-        private void ButtonCancel_Click(object sender, RoutedEventArgs e)
+        private void ButtonFinish_Click(object sender, RoutedEventArgs e)
         {
             if (DevicePort != null)
             {
@@ -197,71 +150,57 @@ namespace PSNNodeAdmin.Windows
                 DevicePort = null;
             }
 
-            DeviceConfig = null;
             GridConfigOverlay.Visibility = Visibility.Hidden;
         }
 
-        private bool ConnectToDevice(string port)
+
+        private void TextBoxField_TextChanged(object sender, TextChangedEventArgs e)
         {
-            try
-            {
-                DevicePort = new SerialPort(port, 9600, Parity.None, 8, StopBits.One);
-                DevicePort.Open();
-
-                // Send command to check if the device is a PSN node
-                DevicePort.Write("psna_pn\n");
-
-                return WaitForSerialMessage() == "psna_pnr" ? true : false;
-            }
-            catch { }
-
-            return false;
+            if (GridConfigOverlay.Visibility != Visibility.Visible) return;
+            ValidateFields();
         }
-        private bool GetDeviceConfig()
+        private void CheckBoxField_CheckedChanged(object sender, RoutedEventArgs e)
         {
-            try
+            if (GridConfigOverlay.Visibility != Visibility.Visible) return;
+
+            if (!(bool)CheckBoxIsEnterprise.IsChecked)
+                TextBoxNetworkUsername.Text = "";
+
+            ValidateFields();
+        }
+        private void PasswordBoxField_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            if (GridConfigOverlay.Visibility != Visibility.Visible) return;
+            ValidateFields();
+        }
+        private void SliderField_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (GridConfigOverlay.Visibility != Visibility.Visible) return;
+            ValidateFields();
+        }
+        private void ValidateFields()
+        {
+            if (TextBoxNetworkName.Text.Length > 0)
             {
-                DevicePort.Write("psna_rc\n");
-
-                string response = WaitForSerialMessage();
-                if (response == null) return false;
-
-                // Deserialise returned JSON message
-                if (response.StartsWith("psna_rcr {"))
+                if (!(bool)CheckBoxIsEnterprise.IsChecked || ((bool)CheckBoxIsEnterprise.IsChecked &&
+                    TextBoxNetworkUsername.Text.Length > 0 && PasswordBoxNetworkPassword.Password.Length > 0))
                 {
-                    response = response.Replace("psna_rcr ", "");
-                    DeviceConfig = JsonConvert.DeserializeObject<NodeConfig>(response);
-                    return true;
+                    if (TextBoxLoggerAddress.Text.Length > 0)
+                    {
+                        try
+                        {
+                            if (Convert.ToUInt16(TextBoxLoggerPort.Text) >= 1024)
+                            {
+                                ButtonSave.IsEnabled = true;
+                                return;
+                            }
+                        }
+                        catch { }
+                    }
                 }
             }
-            catch { }
 
-            return false;
-        }
-        private string WaitForSerialMessage()
-        {
-            string message = "";
-            bool messageEnded = false;
-
-            Stopwatch timeout = new Stopwatch();
-            timeout.Start();
-
-            while (!messageEnded)
-            {
-                while (DevicePort.BytesToRead > 0)
-                {
-                    char readChar = (char)DevicePort.ReadChar();
-
-                    if (readChar != '\n')
-                        message += readChar;
-                    else messageEnded = true;
-                }
-
-                if (timeout.ElapsedMilliseconds >= 1000)
-                    return null;
-            }
-
-            return message;
+            ButtonSave.IsEnabled = false;
         }
     }
 }

@@ -1,77 +1,96 @@
 ﻿<Window x:Class="PSNNodeAdmin.Windows.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="PSN Node Administrator" Width="450" MinHeight="350" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" SizeToContent="Height" Closed="Window_Closed">
+        Title="PSN Node Administrator" Width="450" MinHeight="320" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" SizeToContent="Height" Closed="Window_Closed">
 
-    <Grid Margin="0,0,0,10">
+    <Grid>
         <StackPanel x:Name="StackPanelPrompt" VerticalAlignment="Center" HorizontalAlignment="Center" Width="280">
             <Label Content="PSN" VerticalAlignment="Top" FontSize="120" Padding="0" FontWeight="Bold" Foreground="LightGray" HorizontalContentAlignment="Center" Margin="0,-45,0,-10"/>
-            <TextBlock Text="Connect a PSN node. If there is already one connected then re-connect it." HorizontalAlignment="Stretch" VerticalAlignment="Top" TextWrapping="Wrap" TextAlignment="Center" Margin="26,0"/>
+            <TextBlock Text="Connect a PSN sensor node. If one is already connected, re-connect it. Remove the battery before connection." HorizontalAlignment="Stretch" VerticalAlignment="Top" TextWrapping="Wrap" TextAlignment="Center" Margin="26,0"/>
         </StackPanel>
 
-        <Grid x:Name="GridConfigOverlay" Background="White" Visibility="Hidden">
-            <Label x:Name="LabelID" Margin="10,10,9,0" VerticalAlignment="Top" Height="26" FontWeight="Bold" HorizontalContentAlignment="Center"/>
+        <StackPanel x:Name="GridConfigOverlay" Background="White" Visibility="Hidden" Margin="10,0,10,10">
+            <Label x:Name="LabelID" Margin="0" VerticalAlignment="Top" Height="26" FontWeight="Bold" HorizontalContentAlignment="Center"/>
 
-            <GroupBox Margin="10,36,10,0" VerticalAlignment="Top" Style="{DynamicResource GroupBoxStyle}" BorderBrush="#FF707070">
+            <GroupBox Margin="0" VerticalAlignment="Top" Style="{DynamicResource GroupBoxStyle}" BorderBrush="#FF707070">
                 <GroupBox.Header>
                     <TextBlock FontWeight="Bold" Text="WiFi Network"/>
                 </GroupBox.Header>
 
                 <Grid Margin="5,8,5,5">
                     <Label Content="WiFi Network Name" VerticalAlignment="Top" Padding="20,0,0,4" HorizontalAlignment="Left" FontStyle="Italic"/>
-                    <TextBox x:Name="TextBoxNetworkName" Height="26" Margin="0,20,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="2,-2,2,0" MaxLength="31" TextChanged="TextBoxField_TextChanged"/>
+                    <TextBox x:Name="TextBoxNetworkName" Height="26" Margin="0,20,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="5,-2,5,0" MaxLength="31" TextChanged="TextBoxField_TextChanged"/>
 
-                    <CheckBox x:Name="CheckBoxIsEnterprise" Content="Specified wifi network is an enterprise network" HorizontalAlignment="Left" Margin="-1,51,0,0" VerticalAlignment="Top" Padding="5,-1,0,0" Checked="CheckBoxField_CheckedChanged" Unchecked="CheckBoxField_CheckedChanged"/>
-                    <Label Content="?" HorizontalAlignment="Left" Margin="269,50,0,0" VerticalAlignment="Top" Padding="0" FontWeight="Bold" Cursor="Help" ToolTip="Enterprise wifi authenticates users with a username and password"/>
+                    <CheckBox x:Name="CheckBoxIsEnterprise" HorizontalAlignment="Left" Margin="-1,50,0,0" VerticalAlignment="Top" Padding="5,-1,0,0" Checked="CheckBoxField_CheckedChanged" Unchecked="CheckBoxField_CheckedChanged"/>
+                    <TextBlock VerticalAlignment="Top" Padding="0" HorizontalAlignment="Left" Margin="20,49,0,0">
+                        <Run Text="Specified WiFi network is an enterprise network"/>
+                        <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="Enterprise WiFi authenticates users with a username and password"/>
+                    </TextBlock>
 
-                    <Label Content="WiFi Username (Enterprise WiFi)" Margin="0,75,0,0" VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left"/>
-                    <TextBox x:Name="TextBoxNetworkUsername" Height="26" Margin="0,95,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="2,-2,2,0" IsEnabled="{Binding IsChecked, ElementName=CheckBoxIsEnterprise}" MaxLength="63" TextChanged="TextBoxField_TextChanged"/>
+                    <Label Content="WiFi Username (Enterprise WiFi)" Margin="0,74,0,0" VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left"/>
+                    <TextBox x:Name="TextBoxNetworkUsername" Height="26" Margin="0,94,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="5,-2,5,0" IsEnabled="{Binding IsChecked, ElementName=CheckBoxIsEnterprise}" MaxLength="63" TextChanged="TextBoxField_TextChanged"/>
 
-                    <Label Content="WiFi Password" Margin="0,126,0,0" VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left"/>
-                    <PasswordBox x:Name="PasswordBoxNetworkPassword" Height="26" Margin="0,146,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="2,-2,2,0" MaxLength="63" PasswordChanged="PasswordBoxField_PasswordChanged"/>
+                    <Label Content="WiFi Password" Margin="0,125,0,0" VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left"/>
+                    <PasswordBox x:Name="PasswordBoxNetworkPassword" Height="26" Margin="0,145,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="5,-2,5,0" MaxLength="63" PasswordChanged="PasswordBoxField_PasswordChanged"/>
                 </Grid>
             </GroupBox>
 
-            <GroupBox Margin="11,250,9,0" VerticalAlignment="Top" Style="{DynamicResource GroupBoxStyle}" BorderBrush="#FF707070">
+            <GroupBox Margin="0,5,0,0" VerticalAlignment="Top" Style="{DynamicResource GroupBoxStyle}" BorderBrush="#FF707070">
                 <GroupBox.Header>
                     <TextBlock FontWeight="Bold" Text="Logging Server"/>
                 </GroupBox.Header>
 
                 <Grid Margin="5,8,5,5">
-                    <TextBlock VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left">
-                        <Run Text="Address &amp; Port Number"/>
-                        <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="The logging server is responsible for receiving node data. Default port is 1883"/>
-                    </TextBlock>
+                    <TextBlock Text="Address &amp; Port Number" VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left"/>
 
-                    <TextBox x:Name="TextBoxLoggerAddress" Height="26" Margin="0,20,85,0" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="2,-1,2,0" MaxLength="15" TextChanged="TextBoxField_TextChanged"/>
-                    <TextBox x:Name="TextBoxLoggerPort" Height="26" Margin="0,20,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="2,-1,2,0" HorizontalAlignment="Right" Width="80" MaxLength="5" TextAlignment="Center" TextChanged="TextBoxField_TextChanged"/>
+                    <TextBox x:Name="TextBoxLoggerAddress" Height="26" Margin="0,20,75,0" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="5,-1,5,0" MaxLength="31" TextChanged="TextBoxField_TextChanged"/>
+                    <TextBox x:Name="TextBoxLoggerPort" Height="26" Margin="0,20,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="5,-1,5,0" HorizontalAlignment="Right" Width="70" MaxLength="5" TextAlignment="Center" TextChanged="TextBoxField_TextChanged"/>
                 </Grid>
             </GroupBox>
 
-            <GroupBox Margin="10,338,10,0" VerticalAlignment="Top" Style="{DynamicResource GroupBoxStyle}" BorderBrush="#FF707070">
+            <GroupBox Margin="0,5,0,0" VerticalAlignment="Top" Style="{DynamicResource GroupBoxStyle}" BorderBrush="#FF707070">
                 <GroupBox.Header>
                     <TextBlock FontWeight="Bold" Text="Timeouts"/>
                 </GroupBox.Header>
 
                 <Grid Margin="5,8,5,5">
-                    <TextBlock VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left" Width="239">
+                    <TextBlock VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left">
                         <Run Text="Network Connection Timeout"/>
                         <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="Time to wait before aborting network connection attempt"/>
                     </TextBlock>
-                    <Slider x:Name="SliderNetworkTimeout" Margin="0,20,23,0" VerticalAlignment="Top" Minimum="1" Maximum="20" IsSnapToTickEnabled="True" ValueChanged="SliderField_ValueChanged"/>
+                    <Slider x:Name="SliderNetworkTimeout" Margin="0,20,23,0" VerticalAlignment="Top" Minimum="1" Maximum="13" IsSnapToTickEnabled="True" ValueChanged="SliderField_ValueChanged"/>
                     <Label Content="{Binding ElementName=SliderNetworkTimeout, Path=Value}" ContentStringFormat="{}{0}s" Margin="0,20,0,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" Padding="0" HorizontalAlignment="Right" Width="18"/>
 
-                    <TextBlock Margin="0,44,0,0" VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left" Width="226">
+                    <TextBlock Margin="0,44,0,0" VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left">
                         <Run Text="Logging Server Operation Timeout"/>
                         <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="Time to wait before aborting any attempt to contact the logging server"/>
                     </TextBlock>
-                    <Slider x:Name="SliderLoggerTimeout" Margin="0,64,23,0" VerticalAlignment="Top" Minimum="1" Maximum="20" IsSnapToTickEnabled="True" ValueChanged="SliderField_ValueChanged"/>
+                    <Slider x:Name="SliderLoggerTimeout" Margin="0,64,23,0" VerticalAlignment="Top" Minimum="1" Maximum="13" IsSnapToTickEnabled="True" ValueChanged="SliderField_ValueChanged"/>
                     <Label Content="{Binding ElementName=SliderLoggerTimeout, Path=Value}" ContentStringFormat="{}{0}s" Margin="0,64,0,0" VerticalAlignment="Top" HorizontalContentAlignment="Center" Padding="0" HorizontalAlignment="Right" Width="18"/>
                 </Grid>
             </GroupBox>
 
-            <Button x:Name="ButtonSave" Content="Save to Device" Margin="10,595,115,0" VerticalAlignment="Top" Height="26" Padding="0,-2,0,0" Click="ButtonSave_Click" IsEnabled="False"/>
-            <Button x:Name="ButtonCancel" Content="Cancel" HorizontalAlignment="Right" Margin="0,595,10,0" VerticalAlignment="Top" Width="100" Height="26" Padding="0,-2,0,0" Click="ButtonCancel_Click"/>
-        </Grid>
+            <GroupBox Margin="0,5,0,0" VerticalAlignment="Top" Style="{DynamicResource GroupBoxStyle}" BorderBrush="#FF707070">
+                <GroupBox.Header>
+                    <TextBlock FontWeight="Bold" Text="Device Time"/>
+                </GroupBox.Header>
+
+                <Grid Margin="5,8,5,5">
+                    <TextBlock VerticalAlignment="Top" Padding="20,0,0,4" FontStyle="Italic" HorizontalAlignment="Left">
+                        <Run Text="Current Device Time"/>
+                        <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="Current time on the device's internal clock. If invalid then it needs manually resyncing with your computer's time"/>
+                    </TextBlock>
+
+                    <TextBox x:Name="TextBoxDeviceTime" Height="26" Margin="0,20,120,0" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="5,-1,5,0" MaxLength="15" TextChanged="TextBoxField_TextChanged" IsReadOnly="True"/>
+                    <Button x:Name="ButtonRefreshTime" Content="Refresh" HorizontalAlignment="Right" Margin="0,20,60,0" Width="55" Padding="0,-2,0,0" Click="ButtonRefreshTime_Click" ToolTip="Re-read the time on the device's internal clock"/>
+                    <Button x:Name="ButtonResyncTime" Content="Resync" HorizontalAlignment="Right" Margin="0,20,0,0" Width="55" Padding="0,-2,0,0" ToolTip="Set the time on the device's internal clock to the current time on this computer" Height="26" VerticalAlignment="Top" Click="ButtonResyncTime_Click"/>
+                </Grid>
+            </GroupBox>
+
+            <Grid Margin="0,10,0,0">
+                <Button x:Name="ButtonSave" Content="Save to Device" Margin="0,0,105,0" VerticalAlignment="Top" Height="26" Padding="0,-2,0,0" Click="ButtonSave_Click" IsEnabled="False"/>
+                <Button x:Name="ButtonFinish" Content="Finish" HorizontalAlignment="Right" Margin="0" VerticalAlignment="Top" Width="100" Height="26" Padding="0,-2,0,0" Click="ButtonFinish_Click"/>
+            </Grid>
+        </StackPanel>
     </Grid>
 </Window>

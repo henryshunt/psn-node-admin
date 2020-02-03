@@ -60,6 +60,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Routines\DeviceChangeWatcher.cs" />
+    <Compile Include="Routines\Helpers.cs" />
     <Compile Include="Routines\SerialPortWatcher.cs" />
     <Page Include="Windows\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -75,7 +76,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Routines\NodeConfig.cs" />
+    <Compile Include="Routines\JSON.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

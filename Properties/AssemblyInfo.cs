@@ -1,6 +1,4 @@
 ﻿using System.Reflection;
-using System.Resources;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
 
@@ -8,11 +6,11 @@ using System.Windows;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("PSN Node Administrator")]
-[assembly: AssemblyDescription("Manage the configuration data stored on PSN nodes")]
+[assembly: AssemblyDescription("Manage the configuration of PSN sensor node devices")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Henry Hunt")]
 [assembly: AssemblyProduct("PSN Node Administrator")]
-[assembly: AssemblyCopyright("Copyright © Henry Hunt 2019")]
+[assembly: AssemblyCopyright("Copyright © Henry Hunt 2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
