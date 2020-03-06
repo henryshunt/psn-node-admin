@@ -129,7 +129,6 @@ namespace PSNNodeAdmin.Routines
                     return null;
             }
 
-            Console.WriteLine(message);
             return message;
         }
     }
