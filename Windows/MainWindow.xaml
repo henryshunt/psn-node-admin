@@ -81,7 +81,7 @@
                         <Run Text="?" FontWeight="Bold" Cursor="Help" ToolTip="Current time on the device's internal clock. If invalid then it needs manually resyncing with your computer's time"/>
                     </TextBlock>
 
-                    <TextBox x:Name="TextBoxDeviceTime" Height="26" Margin="0,20,120,0" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="5,-1,5,0" MaxLength="15" TextChanged="TextBoxField_TextChanged" IsReadOnly="True"/>
+                    <TextBox x:Name="TextBoxDeviceTime" Height="26" Margin="0,20,120,0" VerticalAlignment="Top" VerticalContentAlignment="Center" Padding="5,-1,5,0" MaxLength="15" IsReadOnly="True"/>
                     <Button x:Name="ButtonRefreshTime" Content="Refresh" HorizontalAlignment="Right" Margin="0,20,60,0" Width="55" Padding="0,-2,0,0" Click="ButtonRefreshTime_Click" ToolTip="Re-read the time on the device's internal clock"/>
                     <Button x:Name="ButtonResyncTime" Content="Resync" HorizontalAlignment="Right" Margin="0,20,0,0" Width="55" Padding="0,-2,0,0" ToolTip="Set the time on the device's internal clock to the current time on this computer" Height="26" VerticalAlignment="Top" Click="ButtonResyncTime_Click"/>
                 </Grid>
